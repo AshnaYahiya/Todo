@@ -44,6 +44,7 @@ class Registration(View):                      # form - register
             User.objects.create_user(**form.cleaned_data)    # serveril nninum password poleulla sathanghal ini vaayikan pattilla athin vendi django secure aaki
             form=Register()
         return redirect('reg')            # username poleolla details okke adichitt nere taskmodel pageilekk direct poyikolum
+    
 # =======================================  log in   =========================================
 
 class Sighnin(View):
@@ -59,13 +60,11 @@ class Sighnin(View):
 
             u_name=form.cleaned_data.get("username")
             pwd=form.cleaned_data.get("password")
-
             user_obj=authenticate(username=u_name,password=pwd)    # cross check cheyyan venditt aanu authenticate fnctn use cheyunath 
             if user_obj:
                 print("valid credentials")
-
-                login(request,user_obj)     # login oru fnctn aanu 
-                return redirect("reg")
+                login(request,user_obj)       # login oru fnctn aanu 
+                return redirect('reg')
             else:
                 form=Loginform()
                 print("invalid")
@@ -80,12 +79,12 @@ class Add_task(View):
         # data=Taskmodel.objects.all().order_by('completed')   # completed addeel varan not completed adhyam vaaran
         data=Taskmodel.objects.filter(user=request.user).order_by('completed')
         return render(request,"index.html",{"form":form,"data":data})
+    
     def post(self,request,**kwargs):
         form=Taskform(request.POST)
 
         if form.is_valid():
             form.instance.user=request.user   # form nte details tableil add avunna kuutathil login cheytha user nte details kuude add avanam athin vendit aanu ith foreign kond connect aakittund but fetch cheyyan paatilla....userude id aayirikum task tableil add avanne ath fetch cheytha ella detailsum kittum
-            
             #req.user=get the authenticated user(login cheyunna userude name)
             form.save()
             messages.success(request,"Task Added Successfully")   # import cheyyanaam
@@ -105,7 +104,7 @@ class Delete_task(View):
         Taskmodel.objects.get(id=id).delete()
         return redirect("reg")
 
-
+# ==============================================================================
 class Task_edit(View):
 
     def get(self,request,*args,**kwargs):
@@ -127,6 +126,24 @@ class Logout(View):
 class user_delete(View):
     def get(self,request,**kwargs):
         id=kwargs.get('pk')
-        data=User.objects.get(id=id).delete()
+        User.objects.get(id=id).delete()
         return redirect('signin')
-# ================================================
+     
+    
+# ================================================ update user profile =============================== but didnt update password or username it is inbuilt so we can't update
+
+class update_user(View):
+    def get(self,request,**kwargs):
+        id=kwargs.get('pk')
+        data=User.objects.get(id=id)
+        form=Register(instance=data)
+        return render(request,'register.html',{"form":form})
+    
+    def post(self,request,**kwargs):
+        id=kwargs.get('pk')
+        data=User.objects.get(id=id)
+        form=Register(request.POST,instance=data)
+        if form.is_valid():
+            form.save()
+        return redirect('signin')
+# ==============================================================
